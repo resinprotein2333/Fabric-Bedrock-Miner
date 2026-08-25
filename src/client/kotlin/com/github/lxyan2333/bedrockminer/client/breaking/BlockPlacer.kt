@@ -12,7 +12,7 @@ import net.minecraft.world.phys.Vec3
 
 object BlockPlacer {
 
-    fun simpleBlockPlacement(pos: BlockPos, item: Item) {
+    suspend fun simpleBlockPlacement(pos: BlockPos, item: Item) {
         InteractionRangeChecker.checkRange(pos)
         val client = Minecraft.getInstance()
         val player = client.player ?: return
@@ -55,7 +55,7 @@ object BlockPlacer {
         return ret
     }
 
-    fun vanillaPistonPlacement2(pos: BlockPos, direction: Direction) {
+    suspend fun vanillaPistonPlacement2(pos: BlockPos, direction: Direction) {
         InteractionRangeChecker.checkRange(pos)
         val client = Minecraft.getInstance()
         val player = client.player ?: return
@@ -92,7 +92,7 @@ object BlockPlacer {
         }
     }
 
-    fun vanillaPistonPlacement(pos: BlockPos, direction: Direction) {
+    suspend fun vanillaPistonPlacement(pos: BlockPos, direction: Direction) {
         vanillaPistonPlacement1(direction)
         vanillaPistonPlacement2(pos, direction)
     }
@@ -102,7 +102,7 @@ object BlockPlacer {
      * hit X coordinate as {@code pos.x + 2 + direction.ordinal * 2}.
      * The server-side Carpet Extra mixin decodes this to override facing.
      */
-    fun carpetPistonPlacement(pos: BlockPos, direction: Direction) {
+    suspend fun carpetPistonPlacement(pos: BlockPos, direction: Direction) {
         InteractionRangeChecker.checkRange(pos)
         val client = Minecraft.getInstance()
         val player = client.player ?: return

@@ -68,8 +68,6 @@ class BreakingFlow(val targetPos: BlockPos, val targetBlockState: BlockState) {
 
                 // Step 3: one-tick — break torch, break piston, place piston facing target
                 approach.placePistonAfter(approach.pushDir) {
-                    //? if >= 1.21.1
-                    InventoryManager.ensureMainHandHold(Items.DIAMOND_PICKAXE)
                     BlockBreaker.breakBlock(approach.torchPos)
                     BlockBreaker.breakBlock(approach.pistonPos)
                 }
@@ -117,8 +115,6 @@ class BreakingFlow(val targetPos: BlockPos, val targetBlockState: BlockState) {
     private suspend fun cleanup(level: Level, approach: ApproachBase) {
         try {
             if (!MinecraftClientCompat.canBeReplaced(level, approach.pistonPos)) {
-                //? if >= 1.21.1
-                InventoryManager.ensureMainHandHold(Items.DIAMOND_PICKAXE)
                 BlockBreaker.breakBlock(approach.pistonPos)
             }
 

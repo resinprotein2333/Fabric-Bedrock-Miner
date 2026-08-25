@@ -13,7 +13,7 @@ import net.minecraft.world.item.Items
 object BlockBreaker {
     private val pendingUpdates = mutableSetOf<BlockPos>()
 
-    fun breakBlock(pos: BlockPos) {
+    suspend fun breakBlock(pos: BlockPos) {
         InteractionRangeChecker.checkRange(pos)
         InventoryManager.switchToItem(Items.DIAMOND_PICKAXE)
         val gameMode = Minecraft.getInstance().gameMode ?: return

@@ -41,22 +41,9 @@ object InventoryManager {
         }
         return false
     }
-
-    suspend fun ensureMainHandHold(item: Item) {
-        val client = Minecraft.getInstance()
-        val player = client.player ?: return
-        val inventory = player.inventory
-        if (getBlockBreakingSpeed(
-                Blocks.PISTON.defaultBlockState(), MinecraftClientCompat.getSelectedItem(inventory)
-            ) > INSTANT_MINE_THRESHOLD
-        ) {
-            return
-        }
-        ClientTickScheduler.awaitTicks(Configs.Server.WAIT_SERVER_TICK_PLAYER_ENTITY_TICKS.integerValue)
-    }
     //?}
 
-    fun switchToItem(item: Item): Boolean {
+    suspend fun switchToItem(item: Item): Boolean {
         val client = Minecraft.getInstance()
         val player = client.player ?: return false
         val inventory = player.inventory
@@ -82,6 +69,11 @@ object InventoryManager {
             pickFromInventory(slot)
         }
         client.connection?.send(ServerboundSetCarriedItemPacket(MinecraftClientCompat.selectedSlot(inventory)))
+        //? if >= 1.21.1 {
+        if (item == Items.DIAMOND_PICKAXE) {
+            ClientTickScheduler.awaitTicks(Configs.Server.WAIT_SERVER_TICK_PLAYER_ENTITY_TICKS.integerValue)
+        }
+        //?}
         return true
     }
 
