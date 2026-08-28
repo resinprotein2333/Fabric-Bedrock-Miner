@@ -80,16 +80,19 @@ jobs:
           JAR: ${{ steps.jar.outputs.jar }}
         run: |
           set -euo pipefail
+          # publish under a friendly name: Fabric-Bedrock-Miner-<version>.jar
+          ASSET="Fabric-Bedrock-Miner-${VERSION//+/-}.jar"
+          cp "${JAR}" "${ASSET}"
           if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
             TAG="build-${GITHUB_RUN_NUMBER}"
-            gh release create "${TAG}" "${JAR}" \
+            gh release create "${TAG}" "${ASSET}" \
               --target "${GITHUB_SHA}" \
               --prerelease \
               --title "Bedrock-Miner ${VERSION} (Unofficial)" \
               --notes-file release-notes.md
           else
             TAG="${GITHUB_REF_NAME}"
-            gh release create "${TAG}" "${JAR}" \
+            gh release create "${TAG}" "${ASSET}" \
               --title "Bedrock-Miner ${VERSION} (Unofficial)" \
               --notes-file release-notes.md
           fi
