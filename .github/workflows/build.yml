@@ -7,6 +7,7 @@ on:
     branches:
       - support/1.21.8
   pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
