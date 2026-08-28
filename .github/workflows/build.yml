@@ -1,39 +1,27 @@
-# Automatically build the project and run any configured tests for every push
-# and submitted pull request. This can help catch issues that only occur on
-# certain platforms or Java versions, and provides a first line of defence
-# against bad commits.
+# Unofficial fork build: only Minecraft 1.21.8 is built on every push to the
+# maintenance branch, so this fork never conflicts with upstream releases.
 
 name: build
-on: [pull_request, push]
+on:
+  push:
+    branches:
+      - support/1.21.8
+  pull_request:
 
 jobs:
-  get-versions:
-    runs-on: ubuntu-24.04
-    outputs:
-      versions: ${{ steps.parse.outputs.versions }}
-    steps:
-      - name: checkout repository
-        uses: actions/checkout@v6
-      - name: validate gradle wrapper
-        uses: gradle/actions/wrapper-validation@v6
-      - name: parse versions from versions.json
-        id: parse
-        run: |
-          VERSIONS=$(jq -c '.versions' versions.json)
-          echo "versions=$VERSIONS" >> "$GITHUB_OUTPUT"
-
   build:
-    needs: get-versions
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        version: ${{ fromJson(needs.get-versions.outputs.versions) }}
+        version: ["1.21.8"]
     env:
       CI_VERSION: ${{ matrix.version }}
     steps:
       - name: checkout repository
         uses: actions/checkout@v6
+      - name: validate gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6
       - name: setup jdk
         uses: actions/setup-java@v5
         with:

@@ -1,4 +1,8 @@
-name: Release to CurseForge and Modrinth
+# Unofficial fork release: builds ONLY Minecraft 1.21.8 and publishes it to
+# this fork's own GitHub Releases. Upstream platforms (CurseForge / Modrinth)
+# are intentionally NOT touched to avoid conflicts with the official project.
+
+name: Release (unofficial 1.21.8)
 
 on:
   push:
@@ -7,30 +11,12 @@ on:
   workflow_dispatch:
 
 jobs:
-  get-versions:
+  build-and-release:
     runs-on: ubuntu-24.04
-    outputs:
-      versions: ${{ steps.parse.outputs.versions }}
-    steps:
-      - name: checkout repository
-        uses: actions/checkout@v6
-      - name: parse versions from versions.json
-        id: parse
-        run: |
-          VERSIONS=$(jq -c '.versions' versions.json)
-          echo "versions=$VERSIONS" >> "$GITHUB_OUTPUT"
-
-  build:
-    needs: get-versions
-    runs-on: ubuntu-24.04
-    env:
-      CI_VERSION: ${{ matrix.version }}
     permissions:
       contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        version: ${{ fromJson(needs.get-versions.outputs.versions) }}
+    env:
+      CI_VERSION: '1.21.8'
     steps:
       - name: checkout repository
         uses: actions/checkout@v6
@@ -53,69 +39,57 @@ jobs:
             echo "Attempt $i to download dependencies..."
             ./gradlew dependencies --no-daemon && break || sleep 15
           done
-      - name: build
-        run: ./gradlew :${{ matrix.version }}:build
-      - name: prepare release artifact
-        run: |
-          mkdir -p build/release
-          cp versions/${{ matrix.version }}/build/libs/*.jar build/release/
-      - name: upload release files
-        uses: actions/upload-artifact@v7
-        with:
-          name: release-files-${{ matrix.version }}
-          path: build/release/*.jar
-
-  publish:
-    needs: [get-versions, build]
-    runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix:
-        project: ${{ fromJson(needs.get-versions.outputs.versions) }}
-    steps:
-      - name: download release files
-        uses: actions/download-artifact@v7
-        with:
-          name: release-files-${{ matrix.project }}
-          path: build/release
+      - name: build 1.21.8
+        run: ./gradlew :1.21.8:build
 
       - name: read jar metadata
         id: jar
         run: |
           set -euo pipefail
-          jar=$(find build/release -maxdepth 1 -type f -name '*.jar' ! -name '*-dev.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' | sort | head -n 1)
+          jar=$(find versions/1.21.8/build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*-dev.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' | sort | head -n 1)
           test -n "${jar}"
           version=$(unzip -p "${jar}" fabric.mod.json | jq -r '.version')
           echo "jar=${jar}" >> "$GITHUB_OUTPUT"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
 
-      - name: publish ${{ matrix.project }}
-        uses: Kir-Antipov/mc-publish@v3.3
-        with:
-          name: Bedrock-Miner ${{ steps.jar.outputs.version }}
-          version: ${{ steps.jar.outputs.version }}
-          files: build/release/!(*-@(dev|sources|javadoc)).jar
-          curseforge-id: 523864
-          curseforge-token: ${{ secrets.CURSE_API_TOKEN }}
-          modrinth-id: BYMHqMXz
-          modrinth-token: ${{ secrets.MODRINTH_API_KEY }}
+      - name: generate release notes
+        run: |
+          set -euo pipefail
+          # dependency versions are read from stonecutter.properties.toml,
+          # so the notes stay correct after future dependency upgrades
+          SEC=$(awk '/^\["1\.21\.8"\]/{f=1;next} /^\[/{f=0} f' stonecutter.properties.toml)
+          FABRIC_API=$(sed -n 's/.*deps\.fabric_api *= *"\([^"]*\)".*/\1/p' <<<"$SEC")
+          MALILIB=$(sed -n 's/.*deps\.malilib *= *"\([^"]*\)".*/\1/p' <<<"$SEC")
+          MALILIB_MC=$(sed -n 's/.*deps\.malilib_mc *= *"\([^"]*\)".*/\1/p' <<<"$SEC")
+          MOD_MENU=$(sed -n 's/.*deps\.mod_menu *= *"\([^"]*\)".*/\1/p' <<<"$SEC")
+          LOADER=$(sed -n 's/^deps\.fabric_loader *= *"\([^"]*\)".*/\1/p' stonecutter.properties.toml)
+          KOTLIN=$(sed -n 's/^deps\.fabric_kotlin *= *"\([^"]*\)".*/\1/p' stonecutter.properties.toml)
+          test -n "${FABRIC_API}" && test -n "${MALILIB}" && test -n "${LOADER}" && test -n "${KOTLIN}"
+          sed -e "s|{{FABRIC_API}}|${FABRIC_API}|g" \
+              -e "s|{{MALILIB}}|${MALILIB}|g" \
+              -e "s|{{MALILIB_MC}}|${MALILIB_MC}|g" \
+              -e "s|{{MOD_MENU}}|${MOD_MENU}|g" \
+              -e "s|{{LOADER}}|${LOADER}|g" \
+              -e "s|{{KOTLIN}}|${KOTLIN}|g" \
+              .github/release-notes-template.md > release-notes.md
 
-  github-release:
-    needs: build
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: write
-    steps:
-      - name: download all release files
-        uses: actions/download-artifact@v7
-        with:
-          pattern: release-files-*
-          merge-multiple: true
-          path: build/release
-
-      - name: upload GitHub release assets
-        uses: Kir-Antipov/mc-publish@v3.3
-        with:
-          files: build/release/!(*-@(dev|sources|javadoc)).jar
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.jar.outputs.version }}
+          JAR: ${{ steps.jar.outputs.jar }}
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            TAG="build-${GITHUB_RUN_NUMBER}"
+            gh release create "${TAG}" "${JAR}" \
+              --target "${GITHUB_SHA}" \
+              --prerelease \
+              --title "Bedrock-Miner ${VERSION} (Unofficial)" \
+              --notes-file release-notes.md
+          else
+            TAG="${GITHUB_REF_NAME}"
+            gh release create "${TAG}" "${JAR}" \
+              --title "Bedrock-Miner ${VERSION} (Unofficial)" \
+              --notes-file release-notes.md
+          fi
