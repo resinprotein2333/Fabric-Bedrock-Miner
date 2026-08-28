@@ -156,7 +156,7 @@ object InventoryManager {
             speed *= 1.0f + (getDigSpeedAmplification() + 1) * 0.2f
         }
 
-        //? if >=1.21.11 {
+        //? if >=1.21.2 {
         val miningFatigue = MobEffects.MINING_FATIGUE
         //?} else
         //val miningFatigue = MobEffects.DIG_SLOWDOWN

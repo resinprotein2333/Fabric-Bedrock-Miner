@@ -133,7 +133,17 @@ object AreaRenderer : IRenderer {
         } finally {
             ctx.close()
         }
-        //?} else if >=1.21 {
+        //?} else if >=1.21.2 {
+        /*val color = Configs.Area.AREA_BOX_COLOR.color
+        RenderUtils.renderAreaOutline(
+            pos1,
+            pos2,
+            Configs.Area.areaBoxLineWidth,
+            color,
+            color,
+            color
+        )
+        *///?} else if >=1.21 {
         /*val color = Configs.Area.AREA_BOX_COLOR.color
         RenderUtils.renderAreaOutline(
             pos1,

@@ -78,6 +78,15 @@ deps.malilib_mc = "1.21"
 deps.malilib = "0.21.10"
 deps.mod_menu = "11.0.4"
 
+["1.21.8"]
+mod.mc_compat = "1.21.8"
+mod.mc_releases = ["1.21.8"]
+
+deps.fabric_api = "0.136.1+1.21.8"
+deps.malilib_mc = "1.21.8"
+deps.malilib = "0.25.7"
+deps.mod_menu = "15.0.2"
+
 ["1.21.11"]
 mod.mc_compat = "1.21.11"
 mod.mc_releases = ["1.21.11"]

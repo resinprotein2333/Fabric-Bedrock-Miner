@@ -46,7 +46,7 @@ object MinecraftClientCompat {
     }
 
     fun rotationPacket(yaw: Float, pitch: Float, onGround: Boolean): ServerboundMovePlayerPacket.Rot {
-        //? if >=1.21.11 {
+        //? if >=1.21.2 {
         return ServerboundMovePlayerPacket.Rot(yaw, pitch, onGround, false)
         //?} else
         //return ServerboundMovePlayerPacket.Rot(yaw, pitch, onGround)
@@ -68,14 +68,14 @@ object MinecraftClientCompat {
     }
 
     fun selectedSlot(inventory: Inventory): Int {
-        //? if >=1.21.11 {
+        //? if >=1.21.2 {
         return inventory.selectedSlot
         //?} else
         //return inventory.selected
     }
 
     fun setSelectedSlot(inventory: Inventory, slot: Int) {
-        //? if >=1.21.11 {
+        //? if >=1.21.2 {
         inventory.selectedSlot = slot
         //?} else
         //inventory.selected = slot

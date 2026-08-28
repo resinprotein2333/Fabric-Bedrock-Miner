@@ -39,7 +39,7 @@ object IdentifierCompat {
     }
 
     fun block(id: MinecraftIdentifier): Block {
-        //? if >=1.21.11 {
+        //? if >=1.21.2 {
         return blockRegistry().getValue(id)
         //?} else
         //return blockRegistry().get(id)

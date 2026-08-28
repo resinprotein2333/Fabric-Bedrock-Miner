@@ -42,3 +42,9 @@ replay_*.log
 .kotlin
 
 old
+
+# local build logs
+build_log*.txt
+
+# workbuddy local workspace data
+.workbuddy/
