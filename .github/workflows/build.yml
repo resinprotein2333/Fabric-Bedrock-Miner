@@ -46,4 +46,6 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: Artifacts-${{ matrix.version }}
-          path: versions/${{ matrix.version }}/build/libs/*.jar
+          path:
+            - versions/${{ matrix.version }}/build/libs/*.jar
+            - '!versions/${{ matrix.version }}/build/libs/*-sources.jar'
