@@ -42,10 +42,13 @@ jobs:
           done
       - name: build
         run: ./gradlew :${{ matrix.version }}:build
+      - name: stage main jar (drop sources jar)
+        run: |
+          mkdir -p staging
+          cp versions/${{ matrix.version }}/build/libs/*.jar staging/
+          rm -f staging/*-sources.jar
       - name: capture build artifacts
         uses: actions/upload-artifact@v7
         with:
           name: Artifacts-${{ matrix.version }}
-          path:
-            - versions/${{ matrix.version }}/build/libs/*.jar
-            - '!versions/${{ matrix.version }}/build/libs/*-sources.jar'
+          path: staging/*.jar
